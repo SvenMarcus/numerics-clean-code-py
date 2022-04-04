@@ -61,34 +61,57 @@ def ftcs(
                         j,
                     )
                 else:
-                    if boundary_conditions[(i, j)]["t"] == "d":  # dirichlet
-                        next_distribution[i, j] = boundary_conditions[(i, j)]["v"]
-                    elif boundary_conditions[(i, j)]["t"] == "n":  # neumann
-                        gd = boundary_conditions[(i, j)]["d"]  # gradient direction
-                        v = boundary_conditions[(i, j)]["v"]
-                        grid_val: float
-                        sign: int
-                        grid_distance: float
-                        if gd == "N":
-                            grid_val = distribution[i - 2, j]
-                            sign = 1
-                            grid_distance = node_distance_in_y
-                        elif gd == "S":
-                            grid_val = distribution[i + 2, j]
-                            sign = -1
-                            grid_distance = node_distance_in_y
-                        elif gd == "W":
-                            grid_val = distribution[i, j - 2]
-                            sign = 1
-                            grid_distance = node_distance_in_x
-                        elif gd == "E":
-                            grid_val = distribution[i, j + 2]
-                            sign = -1
-                            grid_distance = node_distance_in_x
+                    next_distribution[i, j] = apply_boundary_condition(
+                        distribution,
+                        node_distance_in_y,
+                        node_distance_in_x,
+                        boundary_conditions,
+                        i,
+                        j,
+                    )
 
-                        next_distribution[i, j] = (
-                            grid_val + 2 * sign * v * grid_distance
-                        )
         distribution, next_distribution = next_distribution, distribution
 
     return distribution
+
+
+def apply_boundary_condition(
+    distribution: npt.NDArray[np.float64],
+    node_distance_in_y: float,
+    node_distance_in_x: float,
+    boundary_conditions: BoundaryConditionMap,
+    i: int,
+    j: int,
+) -> np.float64:
+    bc_data = boundary_conditions[(i, j)]
+    bc_type = bc_data["t"]
+    bc_value = boundary_conditions[(i, j)]["v"]
+    next_value: np.float64
+    if bc_type == "d":  # dirichlet
+        next_value = bc_value
+    elif bc_type == "n":  # neumann
+        direction = bc_data["d"]
+        bc_value = boundary_conditions[(i, j)]["v"]
+        grid_value: float
+        sign: int
+        grid_distance: float
+        if direction == "N":
+            grid_value = distribution[i - 2, j]
+            sign = 1
+            grid_distance = node_distance_in_y
+        elif direction == "S":
+            grid_value = distribution[i + 2, j]
+            sign = -1
+            grid_distance = node_distance_in_y
+        elif direction == "W":
+            grid_value = distribution[i, j - 2]
+            sign = 1
+            grid_distance = node_distance_in_x
+        elif direction == "E":
+            grid_value = distribution[i, j + 2]
+            sign = -1
+            grid_distance = node_distance_in_x
+
+        next_value = grid_value + 2 * sign * bc_value * grid_distance
+
+    return next_value
