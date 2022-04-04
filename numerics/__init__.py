@@ -1,24 +1,11 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Literal, Protocol, Tuple
+from typing import Iterator, Literal, Protocol, Tuple
 import numpy as np
 import numpy.typing as npt
 
 
 Index2D = tuple[int, int]
-
-
-class NumericalFunction(Protocol):
-    def __call__(
-        self,
-        distribution: npt.NDArray[np.float64],
-        node_distances: Tuple[float, float],
-        position: Index2D,
-    ) -> np.float64:
-        pass
-
-
-BoundaryConditionMap = dict[Index2D, NumericalFunction]
 
 
 @dataclass
@@ -33,6 +20,33 @@ class Grid:
         self.distribution = np.zeros(self.dimensions)
         self.next_distribution = np.zeros(self.dimensions)
 
+    def __iter__(self) -> Iterator[Index2D]:
+        ny, nx = self.dimensions
+        for y in range(1, ny - 1):
+            for x in range(1, nx - 1):
+                yield (y, x)
+
+    def set_next(self, position: Index2D, value: np.float64) -> None:
+        self.next_distribution[position[0], position[1]] = value
+
+    def swap_distributions(self) -> None:
+        self.distribution, self.next_distribution = (
+            self.next_distribution,
+            self.distribution,
+        )
+
+
+class NumericalFunction(Protocol):
+    def __call__(
+        self,
+        grid: Grid,
+        position: Index2D,
+    ) -> np.float64:
+        pass
+
+
+BoundaryConditionMap = dict[Index2D, NumericalFunction]
+
 
 class HeatEquation:
     def __init__(self, thermal_diffusivity: float, timestep_delta: float) -> None:
@@ -41,25 +55,24 @@ class HeatEquation:
 
     def __call__(
         self,
-        distribution: npt.NDArray[np.float64],
-        node_distances: Tuple[float, float],
+        grid: Grid,
         position: Index2D,
     ) -> np.float64:
         y, x = position
-        node_distance_in_y, node_distance_in_x = node_distances
+        node_distance_in_y, node_distance_in_x = grid.node_distances
         return (
-            distribution[y, x]
+            grid.distribution[y, x]
             + (
                 (
-                    distribution[y + 1, x]
-                    - 2 * distribution[y, x]
-                    + distribution[y - 1, x]
+                    grid.distribution[y + 1, x]
+                    - 2 * grid.distribution[y, x]
+                    + grid.distribution[y - 1, x]
                 )
                 / (node_distance_in_x**2)
                 + (
-                    distribution[y, x + 1]
-                    - 2 * distribution[y, x]
-                    + distribution[y, x - 1]
+                    grid.distribution[y, x + 1]
+                    - 2 * grid.distribution[y, x]
+                    + grid.distribution[y, x - 1]
                 )
                 / (node_distance_in_y**2)
             )
@@ -82,20 +95,13 @@ class Simulation:
         grid: Grid,
         number_of_timesteps: int,
     ) -> npt.NDArray[np.float64]:
-        nodes_in_y, nodes_in_x = grid.dimensions
         for t in range(number_of_timesteps):
-            for i in range(1, nodes_in_y - 1):
-                for j in range(1, nodes_in_x - 1):
-                    current_position = (i, j)
-                    calculation_function = self._get_next_function(current_position)
-                    grid.next_distribution[i, j] = calculation_function(
-                        grid.distribution, grid.node_distances, current_position
-                    )
+            for current_position in grid:
+                calculation_function = self._get_next_function(current_position)
+                next_value = calculation_function(grid, current_position)
+                grid.set_next(current_position, next_value)
 
-            grid.distribution, grid.next_distribution = (
-                grid.next_distribution,
-                grid.distribution,
-            )
+            grid.swap_distributions()
 
         return grid.distribution
 
@@ -116,8 +122,7 @@ class DirichletBoundaryCondition:
 
     def __call__(
         self,
-        distribution: npt.NDArray[np.float64],
-        node_distances: Tuple[float, float],
+        grid: Grid,
         position: Index2D,
     ) -> np.float64:
         return self._value
@@ -137,15 +142,14 @@ class NeumannBoundaryCondition:
 
     def __call__(
         self,
-        distribution: npt.NDArray[np.float64],
-        node_distances: Tuple[float, float],
+        grid: Grid,
         position: Index2D,
     ) -> np.float64:
         y, x = position
         offset_y, offset_x = self._direction.value
-        grid_value = distribution[y + offset_y, x + offset_x]
+        grid_value = grid.distribution[y + offset_y, x + offset_x]
         sign = self._get_sign()
-        grid_distance = self._get_relevant_grid_distance(node_distances)
+        grid_distance = self._get_relevant_grid_distance(grid.node_distances)
 
         return grid_value + 2 * sign * self._value * grid_distance
 
