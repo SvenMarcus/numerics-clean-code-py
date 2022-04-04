@@ -36,7 +36,7 @@ class NeumannBoundaryCondition:
     ) -> np.float64:
         y, x = position
         offset_y, offset_x = self._direction.value
-        grid_value = grid.distribution[y + offset_y, x + offset_x]
+        grid_value = grid.get((y + offset_y, x + offset_x))
         sign = self._get_sign()
         grid_distance = self._get_relevant_grid_distance(grid.node_distances)
 

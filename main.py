@@ -1,7 +1,6 @@
 from typing import cast
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
-import numpy.typing as npt
 
 import numerics
 

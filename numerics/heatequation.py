@@ -15,21 +15,27 @@ class HeatEquation:
         y, x = position
         node_distance_in_y, node_distance_in_x = grid.node_distances
         return (
-            grid.distribution[y, x]
+            grid.get(position)
             + (
-                (
-                    grid.distribution[y + 1, x]
-                    - 2 * grid.distribution[y, x]
-                    + grid.distribution[y - 1, x]
+                self._central_space_value(
+                    grid, (y - 1, x), (y, x), (y + 1, x), node_distance_in_x
                 )
-                / (node_distance_in_x**2)
-                + (
-                    grid.distribution[y, x + 1]
-                    - 2 * grid.distribution[y, x]
-                    + grid.distribution[y, x - 1]
+                + self._central_space_value(
+                    grid, (y, x - 1), (y, x), (y, x + 1), node_distance_in_y
                 )
-                / (node_distance_in_y**2)
             )
             * self._timestep_delta
             * self._thermal_diffusivity
+        )
+
+    def _central_space_value(
+        self,
+        grid: Grid,
+        prev: Index2D,
+        central: Index2D,
+        next: Index2D,
+        node_distance: float,
+    ) -> np.float64:
+        return (grid.get(next) - 2 * grid.get(central) + grid.get(prev)) / (
+            node_distance**2
         )
