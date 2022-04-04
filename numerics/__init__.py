@@ -1,3 +1,4 @@
+from enum import Enum
 from multiprocessing.dummy import current_process
 from typing import Literal, Protocol, Tuple, TypedDict, cast
 import numpy as np
@@ -94,10 +95,15 @@ class DirichletBoundaryCondition:
         return self._value
 
 
+class Direction(Enum):
+    NORTH: Index2D = (-2, 0)
+    SOUTH: Index2D = (2, 0)
+    WEST: Index2D = (0, -2)
+    EAST: Index2D = (0, 2)
+
+
 class NeumannBoundaryCondition:
-    def __init__(
-        self, value: np.float64, direction: Literal["N", "W", "S", "E"]
-    ) -> None:
+    def __init__(self, value: np.float64, direction: Direction) -> None:
         self._value = value
         self._direction = direction
 
@@ -108,24 +114,19 @@ class NeumannBoundaryCondition:
         position: Index2D,
     ) -> np.float64:
         i, j = position
-        grid_value: np.float64
-        sign: int
+        offset_y, offset_x = self._direction.value
+        grid_value = distribution[i + offset_y, j + offset_x]
+
+        if self._direction.value[0] >= 0 and self._direction.value[1] >= 0:
+            sign = -1
+        else:
+            sign = 1
+
         grid_distance: float
-        if self._direction == "N":
-            grid_value = distribution[i - 2, j]
-            sign = 1
+        if self._direction.value[0] != 0:
             grid_distance = node_distances[0]
-        elif self._direction == "S":
-            grid_value = distribution[i + 2, j]
-            sign = -1
-            grid_distance = node_distances[0]
-        elif self._direction == "W":
-            grid_value = distribution[i, j - 2]
-            sign = 1
+        else:
             grid_distance = node_distances[1]
-        elif self._direction == "E":
-            grid_value = distribution[i, j + 2]
-            sign = -1
-            grid_distance = node_distances[1]
+
 
         return grid_value + 2 * sign * self._value * grid_distance

@@ -29,7 +29,7 @@ for x in range(nx):
     bc[(1, x)] = dirichlet_top
     bc[(ny - 2, x)] = dirichlet_top
 
-bc[(ny // 2, nx // 2)] = numerics.NeumannBoundaryCondition(cast(np.float64, 0.5), "S")
+bc[(ny // 2, nx // 2)] = numerics.NeumannBoundaryCondition(cast(np.float64, 0.5), numerics.Direction.SOUTH)
 
 
 T0 = numerics.ftcs(T0, T1, nt, dt, ny, dy, nx, dy, K, bc)
