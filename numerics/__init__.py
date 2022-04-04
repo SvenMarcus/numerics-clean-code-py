@@ -13,6 +13,28 @@ Index2D = tuple[int, int]
 BoundaryConditionMap = dict[Index2D, BoundaryCondition]
 
 
+def apply_heat_equation(
+    distribution: npt.NDArray[np.float64],
+    node_distance_in_y: float,
+    node_distance_in_x: float,
+    timestep_delta: float,
+    thermal_diffusivity: float,
+    y: int,
+    x: int,
+) -> np.float64:
+    return (
+        distribution[y, x]
+        + (
+            (distribution[y + 1, x] - 2 * distribution[y, x] + distribution[y - 1, x])
+            / (node_distance_in_x**2)
+            + (distribution[y, x + 1] - 2 * distribution[y, x] + distribution[y, x - 1])
+            / (node_distance_in_y**2)
+        )
+        * timestep_delta
+        * thermal_diffusivity
+    )
+
+
 def ftcs(
     distribution: npt.NDArray[np.float64],
     next_distribution: npt.NDArray[np.float64],
@@ -29,24 +51,14 @@ def ftcs(
         for i in range(1, nodes_in_y - 1):
             for j in range(1, nodes_in_x - 1):
                 if (i, j) not in boundary_conditions:
-                    next_distribution[i, j] = (
-                        distribution[i, j]
-                        + (
-                            (
-                                distribution[i + 1, j]
-                                - 2 * distribution[i, j]
-                                + distribution[i - 1, j]
-                            )
-                            / (node_distance_in_x**2)
-                            + (
-                                distribution[i, j + 1]
-                                - 2 * distribution[i, j]
-                                + distribution[i, j - 1]
-                            )
-                            / (node_distance_in_y**2)
-                        )
-                        * timestep_delta
-                        * thermal_diffusivity
+                    next_distribution[i, j] = apply_heat_equation(
+                        distribution,
+                        node_distance_in_y,
+                        node_distance_in_x,
+                        timestep_delta,
+                        thermal_diffusivity,
+                        i,
+                        j,
                     )
                 else:
                     if boundary_conditions[(i, j)]["t"] == "d":  # dirichlet
