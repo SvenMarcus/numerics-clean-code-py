@@ -1,12 +1,12 @@
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, cast
 import numpy as np
 import numpy.typing as npt
 
 
 class BoundaryCondition(TypedDict, total=False):
-    t: Literal["d", "n"]
-    v: float
-    d: Literal["N", "W", "S", "E"]
+    type: Literal["dirichlet", "neumann"]
+    value: float
+    direction: Literal["N", "W", "S", "E"]
 
 
 Index2D = tuple[int, int]
@@ -84,14 +84,13 @@ def apply_boundary_condition(
     j: int,
 ) -> np.float64:
     bc_data = boundary_conditions[(i, j)]
-    bc_type = bc_data["t"]
-    bc_value = boundary_conditions[(i, j)]["v"]
+    bc_type = bc_data["type"]
+    bc_value = cast(np.float64, bc_data["value"])
     next_value: np.float64
-    if bc_type == "d":  # dirichlet
+    if bc_type == "dirichlet":  # dirichlet
         next_value = bc_value
-    elif bc_type == "n":  # neumann
-        direction = bc_data["d"]
-        bc_value = boundary_conditions[(i, j)]["v"]
+    elif bc_type == "neumann":  # neumann
+        direction = bc_data["direction"]
         grid_value: float
         sign: int
         grid_distance: float

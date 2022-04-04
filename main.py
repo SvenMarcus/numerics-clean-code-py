@@ -25,20 +25,20 @@ assert K * dt / (dx**2) <= 0.25
 bc: numerics.BoundaryConditionMap = {}
 for x in range(nx):
     bc[(1, x)] = {
-        "t": "d",
-        "v": 1.0,
+        "type": "dirichlet",
+        "value": 1.0,
     }
 
     bc[(ny - 2, x)] = {
-        "t": "d",
-        "v": 1.0,
+        "type": "dirichlet",
+        "value": 1.0,
     }
 
 
 bc[(ny // 2, nx // 2)] = {
-    "t": "n",
-    "v": 0.5,
-    "d": "S",
+    "type": "neumann",
+    "value": 0.5,
+    "direction": "S",
 }
 
 
