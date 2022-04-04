@@ -7,7 +7,7 @@ import numpy.typing as npt
 Index2D = tuple[int, int]
 
 
-class BoundaryCondition(Protocol):
+class NumericalFunction(Protocol):
     def __call__(
         self,
         distribution: npt.NDArray[np.float64],
@@ -17,7 +17,7 @@ class BoundaryCondition(Protocol):
         pass
 
 
-BoundaryConditionMap = dict[Index2D, BoundaryCondition]
+BoundaryConditionMap = dict[Index2D, NumericalFunction]
 
 
 class HeatEquation:
@@ -68,23 +68,23 @@ def ftcs(
         for i in range(1, nodes_in_y - 1):
             for j in range(1, nodes_in_x - 1):
                 current_position = (i, j)
-                if current_position not in boundary_conditions:
-                    next_distribution[i, j] = numerical_scheme(
-                        distribution,
-                        node_distances,
-                        current_position,
-                    )
-                else:
-                    boundary_condition = boundary_conditions[current_position]
-                    next_distribution[i, j] = boundary_condition(
-                        distribution,
-                        node_distances,
-                        current_position
-                    )
+                calculation_function = _get_next_function(
+                    numerical_scheme, boundary_conditions, current_position
+                )
+                next_distribution[i, j] = calculation_function(
+                    distribution, node_distances, current_position
+                )
 
         distribution, next_distribution = next_distribution, distribution
 
     return distribution
+
+
+def _get_next_function(numerical_scheme, boundary_conditions, current_position):
+    calculation_function: NumericalFunction = numerical_scheme
+    if current_position in boundary_conditions:
+        calculation_function = boundary_conditions[current_position]
+    return calculation_function
 
 
 class DirichletBoundaryCondition:
