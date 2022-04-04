@@ -1,6 +1,5 @@
 from enum import Enum
-from multiprocessing.dummy import current_process
-from typing import Literal, Protocol, Tuple, TypedDict, cast
+from typing import Literal, Protocol, Tuple
 import numpy as np
 import numpy.typing as npt
 
@@ -113,20 +112,24 @@ class NeumannBoundaryCondition:
         node_distances: Tuple[float, float],
         position: Index2D,
     ) -> np.float64:
-        i, j = position
+        y, x = position
         offset_y, offset_x = self._direction.value
-        grid_value = distribution[i + offset_y, j + offset_x]
+        grid_value = distribution[y + offset_y, x + offset_x]
+        sign = self._get_sign()
+        grid_distance = self._get_relevant_grid_distance(node_distances)
 
-        if self._direction.value[0] >= 0 and self._direction.value[1] >= 0:
-            sign = -1
-        else:
-            sign = 1
+        return grid_value + 2 * sign * self._value * grid_distance
 
+    def _get_relevant_grid_distance(self, node_distances: Tuple[float, float]) -> float:
         grid_distance: float
         if self._direction.value[0] != 0:
             grid_distance = node_distances[0]
         else:
             grid_distance = node_distances[1]
+        return grid_distance
 
+    def _get_sign(self) -> Literal[1, -1]:
+        if self._direction.value[0] >= 0 and self._direction.value[1] >= 0:
+            return -1
 
-        return grid_value + 2 * sign * self._value * grid_distance
+        return 1
