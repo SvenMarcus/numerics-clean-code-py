@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Literal, Protocol, Tuple
 import numpy as np
@@ -18,6 +19,19 @@ class NumericalFunction(Protocol):
 
 
 BoundaryConditionMap = dict[Index2D, NumericalFunction]
+
+
+@dataclass
+class Grid:
+    dimensions: Tuple[int, int]
+    node_distances: Tuple[float, float]
+
+    distribution: npt.NDArray[np.float64] = field(init=False)
+    next_distribution: npt.NDArray[np.float64] = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.distribution = np.zeros(self.dimensions)
+        self.next_distribution = np.zeros(self.dimensions)
 
 
 class HeatEquation:
@@ -65,25 +79,25 @@ class Simulation:
 
     def run(
         self,
-        distribution: npt.NDArray[np.float64],
-        next_distribution: npt.NDArray[np.float64],
+        grid: Grid,
         number_of_timesteps: int,
-        grid_dimensions: Tuple[int, int],
-        node_distances: Tuple[float, float],
     ) -> npt.NDArray[np.float64]:
-        nodes_in_y, nodes_in_x = grid_dimensions
+        nodes_in_y, nodes_in_x = grid.dimensions
         for t in range(number_of_timesteps):
             for i in range(1, nodes_in_y - 1):
                 for j in range(1, nodes_in_x - 1):
                     current_position = (i, j)
                     calculation_function = self._get_next_function(current_position)
-                    next_distribution[i, j] = calculation_function(
-                        distribution, node_distances, current_position
+                    grid.next_distribution[i, j] = calculation_function(
+                        grid.distribution, grid.node_distances, current_position
                     )
 
-            distribution, next_distribution = next_distribution, distribution
+            grid.distribution, grid.next_distribution = (
+                grid.next_distribution,
+                grid.distribution,
+            )
 
-        return distribution
+        return grid.distribution
 
     def _get_next_function(
         self,

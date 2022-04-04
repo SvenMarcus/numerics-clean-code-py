@@ -13,9 +13,6 @@ dy = 0.25
 ny = int(L / dy)
 nx = int(W / dx)
 
-T0: npt.NDArray[np.float64] = np.zeros((ny, nx))
-T1: npt.NDArray[np.float64] = np.zeros((ny, nx))
-
 nt = 1000
 dt = 0.1
 
@@ -33,10 +30,10 @@ bc[(ny // 2, nx // 2)] = numerics.NeumannBoundaryCondition(
     cast(np.float64, 0.5), numerics.Direction.SOUTH
 )
 
-
 heat_equation = numerics.HeatEquation(K, dt)
 simulation = numerics.Simulation(heat_equation, bc)
-T0 = simulation.run(T0, T1, nt, (ny, nx), (dy, dx))
+grid = numerics.Grid((ny, nx), (dy, dx))
+T0 = simulation.run(grid, nt)
 
 plt.imshow(T0, cmap="plasma", interpolation="nearest")
 plt.savefig("result.png")
