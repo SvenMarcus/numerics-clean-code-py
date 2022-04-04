@@ -20,60 +20,66 @@ class BoundaryCondition(Protocol):
 BoundaryConditionMap = dict[Index2D, BoundaryCondition]
 
 
-def apply_heat_equation(
-    distribution: npt.NDArray[np.float64],
-    node_distance_in_y: float,
-    node_distance_in_x: float,
-    timestep_delta: float,
-    thermal_diffusivity: float,
-    y: int,
-    x: int,
-) -> np.float64:
-    return (
-        distribution[y, x]
-        + (
-            (distribution[y + 1, x] - 2 * distribution[y, x] + distribution[y - 1, x])
-            / (node_distance_in_x**2)
-            + (distribution[y, x + 1] - 2 * distribution[y, x] + distribution[y, x - 1])
-            / (node_distance_in_y**2)
+class HeatEquation:
+    def __init__(self, thermal_diffusivity: float, timestep_delta: float) -> None:
+        self._thermal_diffusivity = thermal_diffusivity
+        self._timestep_delta = timestep_delta
+
+    def __call__(
+        self,
+        distribution: npt.NDArray[np.float64],
+        node_distances: Tuple[float, float],
+        position: Index2D,
+    ) -> np.float64:
+        y, x = position
+        node_distance_in_y, node_distance_in_x = node_distances
+        return (
+            distribution[y, x]
+            + (
+                (
+                    distribution[y + 1, x]
+                    - 2 * distribution[y, x]
+                    + distribution[y - 1, x]
+                )
+                / (node_distance_in_x**2)
+                + (
+                    distribution[y, x + 1]
+                    - 2 * distribution[y, x]
+                    + distribution[y, x - 1]
+                )
+                / (node_distance_in_y**2)
+            )
+            * self._timestep_delta
+            * self._thermal_diffusivity
         )
-        * timestep_delta
-        * thermal_diffusivity
-    )
 
 
 def ftcs(
     distribution: npt.NDArray[np.float64],
     next_distribution: npt.NDArray[np.float64],
     number_of_timesteps: int,
-    timestep_delta: float,
-    nodes_in_y: int,
-    node_distance_in_y: float,
-    nodes_in_x: int,
-    node_distance_in_x: float,
-    thermal_diffusivity: float,
+    grid_dimensions: Tuple[int, int],
+    node_distances: Tuple[float, float],
+    numerical_scheme: HeatEquation,
     boundary_conditions: BoundaryConditionMap,
 ) -> npt.NDArray[np.float64]:
+    nodes_in_y, nodes_in_x = grid_dimensions
     for t in range(number_of_timesteps):
         for i in range(1, nodes_in_y - 1):
             for j in range(1, nodes_in_x - 1):
                 current_position = (i, j)
                 if current_position not in boundary_conditions:
-                    next_distribution[i, j] = apply_heat_equation(
+                    next_distribution[i, j] = numerical_scheme(
                         distribution,
-                        node_distance_in_y,
-                        node_distance_in_x,
-                        timestep_delta,
-                        thermal_diffusivity,
-                        i,
-                        j,
+                        node_distances,
+                        current_position,
                     )
                 else:
                     boundary_condition = boundary_conditions[current_position]
                     next_distribution[i, j] = boundary_condition(
                         distribution,
-                        (node_distance_in_y, node_distance_in_x),
-                        (i, j),
+                        node_distances,
+                        current_position
                     )
 
         distribution, next_distribution = next_distribution, distribution
