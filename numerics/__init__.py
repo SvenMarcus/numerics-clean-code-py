@@ -1,5 +1,6 @@
 from typing import Literal, TypedDict
 import numpy as np
+import numpy.typing as npt
 
 
 class BoundaryCondition(TypedDict, total=False):
@@ -8,9 +9,13 @@ class BoundaryCondition(TypedDict, total=False):
     d: Literal["N", "W", "S", "E"]
 
 
+Index2D = tuple[int, int]
+BoundaryConditionMap = dict[Index2D, BoundaryCondition]
+
+
 def ftcs(
-    distribution: np.ndarray,
-    next_distribution: np.ndarray,
+    distribution: npt.NDArray[np.float64],
+    next_distribution: npt.NDArray[np.float64],
     number_of_timesteps: int,
     timestep_delta: float,
     nodes_in_y: int,
@@ -18,8 +23,8 @@ def ftcs(
     nodes_in_x: int,
     node_distance_in_x: float,
     thermal_diffusivity: float,
-    boundary_conditions: dict[tuple[int, int], BoundaryCondition],
-):
+    boundary_conditions: BoundaryConditionMap,
+) -> npt.NDArray[np.float64]:
     for t in range(number_of_timesteps):
         for i in range(1, nodes_in_y - 1):
             for j in range(1, nodes_in_x - 1):

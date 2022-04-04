@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
+import numpy.typing as npt
 
 import numerics
 
@@ -11,8 +12,8 @@ dy = 0.25
 ny = int(L / dy)
 nx = int(W / dx)
 
-T0: np.ndarray = np.ndarray((ny, nx))
-T1: np.ndarray = np.ndarray((ny, nx))
+T0: npt.NDArray[np.float64] = np.ndarray((ny, nx))
+T1: npt.NDArray[np.float64] = np.ndarray((ny, nx))
 
 nt = 1000
 dt = 0.1
