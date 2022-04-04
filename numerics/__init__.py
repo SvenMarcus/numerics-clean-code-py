@@ -1,15 +1,22 @@
-from typing import Literal, TypedDict, cast
+from multiprocessing.dummy import current_process
+from typing import Literal, Protocol, Tuple, TypedDict, cast
 import numpy as np
 import numpy.typing as npt
 
 
-class BoundaryCondition(TypedDict, total=False):
-    type: Literal["dirichlet", "neumann"]
-    value: float
-    direction: Literal["N", "W", "S", "E"]
-
-
 Index2D = tuple[int, int]
+
+
+class BoundaryCondition(Protocol):
+    def __call__(
+        self,
+        distribution: npt.NDArray[np.float64],
+        node_distances: Tuple[float, float],
+        position: Index2D,
+    ) -> np.float64:
+        pass
+
+
 BoundaryConditionMap = dict[Index2D, BoundaryCondition]
 
 
@@ -50,7 +57,8 @@ def ftcs(
     for t in range(number_of_timesteps):
         for i in range(1, nodes_in_y - 1):
             for j in range(1, nodes_in_x - 1):
-                if (i, j) not in boundary_conditions:
+                current_position = (i, j)
+                if current_position not in boundary_conditions:
                     next_distribution[i, j] = apply_heat_equation(
                         distribution,
                         node_distance_in_y,
@@ -61,13 +69,11 @@ def ftcs(
                         j,
                     )
                 else:
-                    next_distribution[i, j] = apply_boundary_condition(
+                    boundary_condition = boundary_conditions[current_position]
+                    next_distribution[i, j] = boundary_condition(
                         distribution,
-                        node_distance_in_y,
-                        node_distance_in_x,
-                        boundary_conditions,
-                        i,
-                        j,
+                        (node_distance_in_y, node_distance_in_x),
+                        (i, j),
                     )
 
         distribution, next_distribution = next_distribution, distribution
@@ -75,73 +81,51 @@ def ftcs(
     return distribution
 
 
-def apply_boundary_condition(
-    distribution: npt.NDArray[np.float64],
-    node_distance_in_y: float,
-    node_distance_in_x: float,
-    boundary_conditions: BoundaryConditionMap,
-    i: int,
-    j: int,
-) -> np.float64:
-    bc_data = boundary_conditions[(i, j)]
-    bc_type = bc_data["type"]
-    next_value = BOUNDARY_CONDITION_FUNCTIONS[bc_type](
-        distribution,
-        node_distance_in_y,
-        node_distance_in_x,
-        bc_data,
-        i,
-        j,
-    )
+class DirichletBoundaryCondition:
+    def __init__(self, value: np.float64) -> None:
+        self._value = value
 
-    return next_value
+    def __call__(
+        self,
+        distribution: npt.NDArray[np.float64],
+        node_distances: Tuple[float, float],
+        position: Index2D,
+    ) -> np.float64:
+        return self._value
 
 
-def apply_dirichlet_condition(
-    distribution: npt.NDArray[np.float64],
-    node_distance_in_y: float,
-    node_distance_in_x: float,
-    bc_data: BoundaryCondition,
-    i: int,
-    j: int,
-) -> np.float64:
-    return bc_data["value"]  # type: ignore
+class NeumannBoundaryCondition:
+    def __init__(
+        self, value: np.float64, direction: Literal["N", "W", "S", "E"]
+    ) -> None:
+        self._value = value
+        self._direction = direction
 
+    def __call__(
+        self,
+        distribution: npt.NDArray[np.float64],
+        node_distances: Tuple[float, float],
+        position: Index2D,
+    ) -> np.float64:
+        i, j = position
+        grid_value: np.float64
+        sign: int
+        grid_distance: float
+        if self._direction == "N":
+            grid_value = distribution[i - 2, j]
+            sign = 1
+            grid_distance = node_distances[0]
+        elif self._direction == "S":
+            grid_value = distribution[i + 2, j]
+            sign = -1
+            grid_distance = node_distances[0]
+        elif self._direction == "W":
+            grid_value = distribution[i, j - 2]
+            sign = 1
+            grid_distance = node_distances[1]
+        elif self._direction == "E":
+            grid_value = distribution[i, j + 2]
+            sign = -1
+            grid_distance = node_distances[1]
 
-def apply_neumann_condition(
-    distribution: npt.NDArray[np.float64],
-    node_distance_in_y: float,
-    node_distance_in_x: float,
-    bc_data: BoundaryCondition,
-    i: int,
-    j: int,
-) -> np.float64:
-    bc_value = bc_data["value"]
-    direction = bc_data["direction"]
-    grid_value: np.float64
-    sign: int
-    grid_distance: float
-    if direction == "N":
-        grid_value = distribution[i - 2, j]
-        sign = 1
-        grid_distance = node_distance_in_y
-    elif direction == "S":
-        grid_value = distribution[i + 2, j]
-        sign = -1
-        grid_distance = node_distance_in_y
-    elif direction == "W":
-        grid_value = distribution[i, j - 2]
-        sign = 1
-        grid_distance = node_distance_in_x
-    elif direction == "E":
-        grid_value = distribution[i, j + 2]
-        sign = -1
-        grid_distance = node_distance_in_x
-
-    return grid_value + 2 * sign * bc_value * grid_distance
-
-
-BOUNDARY_CONDITION_FUNCTIONS = {
-    "dirichlet": apply_dirichlet_condition,
-    "neumann": apply_neumann_condition,
-}
+        return grid_value + 2 * sign * self._value * grid_distance

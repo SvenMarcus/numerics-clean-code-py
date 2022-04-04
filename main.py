@@ -1,3 +1,4 @@
+from typing import cast
 import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
 import numpy.typing as npt
@@ -23,23 +24,12 @@ K = 0.111
 assert K * dt / (dx**2) <= 0.25
 
 bc: numerics.BoundaryConditionMap = {}
+dirichlet_top = numerics.DirichletBoundaryCondition(cast(np.float64, 1.0))
 for x in range(nx):
-    bc[(1, x)] = {
-        "type": "dirichlet",
-        "value": 1.0,
-    }
+    bc[(1, x)] = dirichlet_top
+    bc[(ny - 2, x)] = dirichlet_top
 
-    bc[(ny - 2, x)] = {
-        "type": "dirichlet",
-        "value": 1.0,
-    }
-
-
-bc[(ny // 2, nx // 2)] = {
-    "type": "neumann",
-    "value": 0.5,
-    "direction": "S",
-}
+bc[(ny // 2, nx // 2)] = numerics.NeumannBoundaryCondition(cast(np.float64, 0.5), "S")
 
 
 T0 = numerics.ftcs(T0, T1, nt, dt, ny, dy, nx, dy, K, bc)
