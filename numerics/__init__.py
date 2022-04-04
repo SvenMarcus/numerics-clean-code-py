@@ -85,25 +85,27 @@ def apply_boundary_condition(
 ) -> np.float64:
     bc_data = boundary_conditions[(i, j)]
     bc_type = bc_data["type"]
-    bc_value = cast(np.float64, bc_data["value"])
-    next_value: np.float64
-    if bc_type == "dirichlet":  # dirichlet
-        next_value = apply_dirichlet_condition(bc_value)
-    elif bc_type == "neumann":  # neumann
-        next_value = apply_neumann_condition(
-            distribution,
-            node_distance_in_y,
-            node_distance_in_x,
-            bc_data,
-            i,
-            j,
-        )
+    next_value = BOUNDARY_CONDITION_FUNCTIONS[bc_type](
+        distribution,
+        node_distance_in_y,
+        node_distance_in_x,
+        bc_data,
+        i,
+        j,
+    )
 
     return next_value
 
 
-def apply_dirichlet_condition(bc_value: np.float64) -> np.float64:
-    return bc_value
+def apply_dirichlet_condition(
+    distribution: npt.NDArray[np.float64],
+    node_distance_in_y: float,
+    node_distance_in_x: float,
+    bc_data: BoundaryCondition,
+    i: int,
+    j: int,
+) -> np.float64:
+    return bc_data["value"]  # type: ignore
 
 
 def apply_neumann_condition(
@@ -137,3 +139,9 @@ def apply_neumann_condition(
         grid_distance = node_distance_in_x
 
     return grid_value + 2 * sign * bc_value * grid_distance
+
+
+BOUNDARY_CONDITION_FUNCTIONS = {
+    "dirichlet": apply_dirichlet_condition,
+    "neumann": apply_neumann_condition,
+}
