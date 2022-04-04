@@ -12,15 +12,17 @@ dy = 0.25
 ny = int(L / dy)
 nx = int(W / dx)
 
-T0: npt.NDArray[np.float64] = np.ndarray((ny, nx))
-T1: npt.NDArray[np.float64] = np.ndarray((ny, nx))
+T0: npt.NDArray[np.float64] = np.zeros((ny, nx))
+T1: npt.NDArray[np.float64] = np.zeros((ny, nx))
 
 nt = 1000
 dt = 0.1
 
 K = 0.111
 
-bc: dict[tuple[int, int], numerics.BoundaryCondition] = {}
+assert K * dt / (dx**2) <= 0.25
+
+bc: numerics.BoundaryConditionMap = {}
 for x in range(nx):
     bc[(1, x)] = {
         "t": "d",
@@ -29,13 +31,13 @@ for x in range(nx):
 
     bc[(ny - 2, x)] = {
         "t": "d",
-        "v": 0.0,
+        "v": 1.0,
     }
 
 
 bc[(ny // 2, nx // 2)] = {
     "t": "n",
-    "v": -0.5,
+    "v": 0.5,
     "d": "S",
 }
 
