@@ -54,37 +54,46 @@ class HeatEquation:
         )
 
 
-def ftcs(
-    distribution: npt.NDArray[np.float64],
-    next_distribution: npt.NDArray[np.float64],
-    number_of_timesteps: int,
-    grid_dimensions: Tuple[int, int],
-    node_distances: Tuple[float, float],
-    numerical_scheme: HeatEquation,
-    boundary_conditions: BoundaryConditionMap,
-) -> npt.NDArray[np.float64]:
-    nodes_in_y, nodes_in_x = grid_dimensions
-    for t in range(number_of_timesteps):
-        for i in range(1, nodes_in_y - 1):
-            for j in range(1, nodes_in_x - 1):
-                current_position = (i, j)
-                calculation_function = _get_next_function(
-                    numerical_scheme, boundary_conditions, current_position
-                )
-                next_distribution[i, j] = calculation_function(
-                    distribution, node_distances, current_position
-                )
+class Simulation:
+    def __init__(
+        self,
+        numerical_scheme: NumericalFunction,
+        boundary_conditions: BoundaryConditionMap,
+    ) -> None:
+        self._numerical_scheme = numerical_scheme
+        self._boundary_conditions = boundary_conditions
 
-        distribution, next_distribution = next_distribution, distribution
+    def run(
+        self,
+        distribution: npt.NDArray[np.float64],
+        next_distribution: npt.NDArray[np.float64],
+        number_of_timesteps: int,
+        grid_dimensions: Tuple[int, int],
+        node_distances: Tuple[float, float],
+    ) -> npt.NDArray[np.float64]:
+        nodes_in_y, nodes_in_x = grid_dimensions
+        for t in range(number_of_timesteps):
+            for i in range(1, nodes_in_y - 1):
+                for j in range(1, nodes_in_x - 1):
+                    current_position = (i, j)
+                    calculation_function = self._get_next_function(current_position)
+                    next_distribution[i, j] = calculation_function(
+                        distribution, node_distances, current_position
+                    )
 
-    return distribution
+            distribution, next_distribution = next_distribution, distribution
 
+        return distribution
 
-def _get_next_function(numerical_scheme, boundary_conditions, current_position):
-    calculation_function: NumericalFunction = numerical_scheme
-    if current_position in boundary_conditions:
-        calculation_function = boundary_conditions[current_position]
-    return calculation_function
+    def _get_next_function(
+        self,
+        current_position: Index2D,
+    ) -> NumericalFunction:
+        calculation_function = self._numerical_scheme
+        if current_position in self._boundary_conditions:
+            calculation_function = self._boundary_conditions[current_position]
+
+        return calculation_function
 
 
 class DirichletBoundaryCondition:

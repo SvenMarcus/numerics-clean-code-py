@@ -35,7 +35,8 @@ bc[(ny // 2, nx // 2)] = numerics.NeumannBoundaryCondition(
 
 
 heat_equation = numerics.HeatEquation(K, dt)
-T0 = numerics.ftcs(T0, T1, nt, (ny, nx), (dy, dx), heat_equation, bc)
+simulation = numerics.Simulation(heat_equation, bc)
+T0 = simulation.run(T0, T1, nt, (ny, nx), (dy, dx))
 
 plt.imshow(T0, cmap="plasma", interpolation="nearest")
 plt.savefig("result.png")
