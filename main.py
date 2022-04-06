@@ -1,6 +1,6 @@
 from typing import cast
-import matplotlib.pyplot as plt  # type: ignore
 import numpy as np
+from animate import animate
 
 import numerics
 
@@ -32,7 +32,5 @@ bc[(ny // 2, nx // 2)] = numerics.NeumannBoundaryCondition(
 heat_equation = numerics.HeatEquation(K, dt)
 simulation = numerics.Simulation(heat_equation, bc)
 grid = numerics.Grid((ny, nx), (dy, dx))
-T0 = simulation.run(grid, nt)
 
-plt.imshow(T0, cmap="plasma", interpolation="nearest")
-plt.savefig("result.png")
+animate(simulation, grid)
