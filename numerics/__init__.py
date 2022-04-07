@@ -1,20 +1,20 @@
 from numerics.boundaryconditions import (
     Direction,
-    DirichletBoundaryCondition,
-    NeumannBoundaryCondition,
+    dirichlet_boundary,
+    neumann_boundary,
 )
 from numerics.grid import Grid, Index2D
 from numerics.heatequation import HeatEquation
-from numerics.simulation import BoundaryConditionMap, NumericalFunction, Simulation
+from numerics.simulation import BoundaryConditionMap, NumericalFunction, run
 
 __all__ = [
     "Direction",
-    "DirichletBoundaryCondition",
-    "NeumannBoundaryCondition",
+    "dirichlet_boundary",
+    "neumann_boundary",
     "Grid",
     "Index2D",
     "HeatEquation",
     "BoundaryConditionMap",
     "NumericalFunction",
-    "Simulation",
+    "run",
 ]

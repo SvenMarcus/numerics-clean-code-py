@@ -1,25 +1,28 @@
+from numba import float64
+from numba.experimental import jitclass
 import numpy as np
 import numpy.typing as npt
-from dataclasses import dataclass, field
 from typing import Iterator, Tuple
 
 
-Index2D = tuple[int, int]
+Index2D = Tuple[int, int]
 
 
-@dataclass
+@jitclass([ ("distribution", float64[:,:]), ("_next_distribution", float64[:,:]) ])
 class Grid:
     dimensions: Tuple[int, int]
     node_distances: Tuple[float, float]
 
-    distribution: npt.NDArray[np.float64] = field(init=False)
-    _next_distribution: npt.NDArray[np.float64] = field(init=False)
+    distribution: np.ndarray
+    _next_distribution: np.ndarray
 
-    def __post_init__(self) -> None:
+    def __init__(self, dimensions: Tuple[int, int], node_distances: Tuple[float, float]) -> None:
+        self.dimensions = dimensions
+        self.node_distances = node_distances
         self.distribution = np.zeros(self.dimensions)
         self._next_distribution = np.zeros(self.dimensions)
 
-    def __iter__(self) -> Iterator[Index2D]:
+    def iter_index(self) -> Iterator[Index2D]:
         ny, nx = self.distribution.shape
         for position in np.ndindex(ny - 1, nx - 1):
             if 0 in position:

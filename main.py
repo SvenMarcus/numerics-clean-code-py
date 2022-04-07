@@ -1,6 +1,8 @@
 from typing import cast
+from matplotlib import pyplot as plt
+from numba.typed import Dict
 import numpy as np
-from animate import animate
+# from animate import animate
 
 import numerics
 
@@ -19,18 +21,20 @@ K = 0.111
 
 assert K * dt / (dx**2) <= 0.25
 
-bc: numerics.BoundaryConditionMap = {}
-dirichlet_top = numerics.DirichletBoundaryCondition(cast(np.float64, 1.0))
+bc: numerics.BoundaryConditionMap = Dict()
+dirichlet_top = numerics.dirichlet_boundary(cast(np.float64, 1.0))
 for x in range(nx):
     bc[(1, x)] = dirichlet_top
     bc[(ny - 2, x)] = dirichlet_top
 
-bc[(ny // 2, nx // 2)] = numerics.NeumannBoundaryCondition(
+bc[(ny // 2, nx // 2)] = numerics.neumann_boundary(
     cast(np.float64, 0.5), numerics.Direction.SOUTH
 )
 
 heat_equation = numerics.HeatEquation(K, dt)
-simulation = numerics.Simulation(heat_equation, bc)
+# simulation = numerics.Simulation(heat_equation, bc)
 grid = numerics.Grid((ny, nx), (dy, dx))
 
-animate(simulation, grid)
+# animate(simulation, grid)
+dist = numerics.run(heat_equation, bc, grid, nt)
+plt.imsave("result.png", dist, cmap="rainbow")
