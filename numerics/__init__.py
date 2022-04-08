@@ -1,9 +1,10 @@
-def ftcs(T0, T1, nt, dt, ny, dy, nx, dx, k, bc):
+def ftcs(T0, T1, nt, dt, dy, dx, k, bc):
     for t in range(nt):
         T1[1:-1, 1:-1] = T0[1:-1, 1:-1] + k * dt * (
             (T0[2:, 1:-1] - 2 * T0[1:-1, 1:-1] + T0[:-2, 1:-1]) / (dx**2)
             + (T0[1:-1, 2:] - 2 * T0[1:-1, 1:-1] + T0[1:-1, :-2]) / (dy**2)
         )
+
         for p in bc:
             i, j = p
             if bc[(i, j)]["t"] == "d":  # dirichlet

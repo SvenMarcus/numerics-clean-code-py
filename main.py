@@ -11,8 +11,8 @@ dy = .25
 ny = int(L / dy)
 nx = int(W / dx)
 
-T0 = np.ndarray((ny, nx))
-T1 = np.ndarray((ny, nx))
+T0 = np.zeros((ny, nx))
+T1 = np.zeros((ny, nx))
 
 nt = 1000
 dt = .1
@@ -39,7 +39,7 @@ bc[(ny // 2, nx // 2)] = {
 }
 
 
-T0 = numerics.ftcs(T0, T1, nt, dt, ny, dy, nx, dy, K, bc)
+T0 = numerics.ftcs(T0, T1, nt, dt, dy, dx, K, bc)
 
 plt.imshow(T0, cmap="plasma", interpolation="nearest")
 plt.savefig("result.png")
