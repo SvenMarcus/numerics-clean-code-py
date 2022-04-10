@@ -1,38 +1,9 @@
-def ftcs(T0, T1, nt, dt, dy, dx, k, bc):
+def ftcs(numerical_scheme, grid, nt, dy, dx, bc):
     for t in range(nt):
-        T1[1:-1, 1:-1] = T0[1:-1, 1:-1] + k * dt * (
-            (T0[2:, 1:-1] - 2 * T0[1:-1, 1:-1] + T0[:-2, 1:-1]) / (dx**2)
-            + (T0[1:-1, 2:] - 2 * T0[1:-1, 1:-1] + T0[1:-1, :-2]) / (dy**2)
-        )
+        grid.distribution[1:-1, 1:-1] = numerical_scheme(grid)
+        for i, j, bc_entry in bc:
+            grid.distribution[i, j] = bc_entry(grid, (i, j))
 
-        for p in bc:
-            i, j = p
-            if bc[(i, j)]["t"] == "d":  # dirichlet
-                T1[i, j] = bc[(i, j)]["v"]
-            elif bc[(i, j)]["t"] == "n":  # neumann
-                gd = bc[(i, j)]["d"]  # gradient direction
-                v = bc[(i, j)]["v"]
-                val: float
-                dist: float
-                if gd == "N":
-                    val = T0[i - 2, j]
-                    s = 1
-                    dist = dy
-                elif gd == "S":
-                    val = T0[i + 2, j]
-                    s = -1
-                    dist = dy
-                elif gd == "W":
-                    val = T0[i, j - 2]
-                    s = 1
-                    dist = dx
-                elif gd == "E":
-                    val = T0[i, j + 2]
-                    s = -1
-                    dist = dx
+        grid.swap_distributions()
 
-                T1[i, j] = val + 2 * s * v * dist
-
-        T0, T1 = T1, T0
-
-    return T0
+    return grid.distribution
