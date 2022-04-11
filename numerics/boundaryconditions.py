@@ -1,6 +1,5 @@
 from enum import Enum
 from typing import Literal, Tuple, Type
-from typing_extensions import Self
 import numpy as np
 
 from numerics.grid import Grid, Index2D
@@ -8,7 +7,7 @@ from numerics.grid import Grid, Index2D
 
 class Slice2D(tuple[slice, slice]):
     def __new__(
-        cls: Type,
+        cls: Type["Slice2D"],
         y_start: int,
         y_end: int,
         x_start: int,
@@ -35,14 +34,14 @@ class Slice2D(tuple[slice, slice]):
 
 class DirichletBoundaryCondition:
     def __init__(self, value: float, positions: Slice2D) -> None:
-        self._value = value
+        self._value = np.array((value,), dtype=np.float64)
         self.positions = positions
 
     def __call__(
         self,
         grid: Grid,
-    ) -> np.float64:
-        return self._value  # type: ignore
+    ) -> np.ndarray:
+        return self._value
 
 
 class Direction(Enum):
@@ -56,18 +55,15 @@ class NeumannBoundaryCondition:
     def __init__(self, value: float, direction: Direction, positions: Slice2D) -> None:
         self._value = value
         self._direction = direction
+        self.positions = positions
         offset_y, offset_x = self._direction.value
-        y, x = positions
-        y_slice = slice(y.start + offset_y, y.stop + offset_y, y.step)
-        x_slice = slice(x.start + offset_x, x.stop + offset_x, x.step)
-        self.positions = (y_slice, x_slice)
+        self._shifted_positions = positions.shift(offset_y, offset_x)
 
     def __call__(
         self,
         grid: Grid,
-    ) -> np.float64:
-        y, x = self.positions
-        grid_values = grid.distribution[y, x]
+    ) -> np.ndarray:
+        grid_values = grid.distribution[self._shifted_positions]
         sign = self._get_sign()
         grid_distance = self._get_relevant_grid_distance(grid.node_distances)
 

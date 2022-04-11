@@ -1,3 +1,5 @@
+from typing import Set
+
 import numpy as np
 
 import numerics
@@ -10,7 +12,6 @@ from numerics.boundaryconditions import (
 )
 from numerics.grid import Grid
 from numerics.heatequation import HeatEquation
-
 
 L = 50.0
 W = 50.0
@@ -27,7 +28,7 @@ dt = 0.1
 
 K = 0.111
 
-bc = set()
+bc: Set[numerics.BoundaryCondition] = set()
 diricht_bc_top = DirichletBoundaryCondition(1.0, Slice2D(0, 1, 0, nx))
 diricht_bc_bot = DirichletBoundaryCondition(1.0, Slice2D(ny - 1, ny, 0, nx))
 for x in range(nx):
@@ -41,5 +42,7 @@ bc.add(neumann_bc)
 
 heat_equation = HeatEquation(K, dt)
 grid = Grid((ny, nx), (dy, dx))
-simulation_runner = lambda steps: numerics.ftcs(heat_equation, grid, steps, dy, dx, bc)
+simulation_runner = lambda steps: numerics.run_simulation(
+    heat_equation, grid, steps, bc
+)
 animate(simulation_runner)

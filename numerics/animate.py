@@ -1,12 +1,12 @@
 from typing import Callable, Optional
-from matplotlib.image import AxesImage
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+from matplotlib.image import AxesImage  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
+from matplotlib.animation import FuncAnimation  # type: ignore
 import numpy as np
 import numpy.typing as npt
 
 
-def animate(simulation_runner: Callable[[int], npt.NDArray[np.float64]]) -> None:
+def animate(simulation_runner: Callable[[int], np.ndarray]) -> None:
     fig, ax = plt.subplots()
     plot: Optional[AxesImage] = None
 
