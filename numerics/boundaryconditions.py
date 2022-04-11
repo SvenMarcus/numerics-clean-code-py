@@ -12,16 +12,16 @@ class DirichletBoundaryCondition:
 
     def __call__(
         self,
-        grid: "Grid",
+        grid: Grid,
     ) -> np.ndarray:
         return self._value
 
 
 class Direction(Enum):
-    NORTH: "Index2D" = (-2, 0)
-    SOUTH: "Index2D" = (2, 0)
-    WEST: "Index2D" = (0, -2)
-    EAST: "Index2D" = (0, 2)
+    NORTH: Index2D = (-2, 0)
+    SOUTH: Index2D = (2, 0)
+    WEST: Index2D = (0, -2)
+    EAST: Index2D = (0, 2)
 
 
 class NeumannBoundaryCondition:
