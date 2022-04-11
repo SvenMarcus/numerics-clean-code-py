@@ -5,14 +5,17 @@ import numpy as np
 from numerics.grid import Grid, Index2D
 
 
+Slice2D = Tuple[slice, slice]
+
+
 class DirichletBoundaryCondition:
-    def __init__(self, value: float) -> None:
+    def __init__(self, value: float, positions: Slice2D) -> None:
         self._value = value
+        self.positions = positions
 
     def __call__(
         self,
         grid: Grid,
-        position: Index2D,
     ) -> np.float64:
         return self._value  # type: ignore
 
@@ -25,22 +28,25 @@ class Direction(Enum):
 
 
 class NeumannBoundaryCondition:
-    def __init__(self, value: float, direction: Direction) -> None:
+    def __init__(self, value: float, direction: Direction, positions: Slice2D) -> None:
         self._value = value
         self._direction = direction
+        offset_y, offset_x = self._direction.value
+        y, x = positions
+        y_slice = slice(y.start + offset_y, y.stop + offset_y, y.step)
+        x_slice = slice(x.start + offset_x, x.stop + offset_x, x.step)
+        self.positions = (y_slice, x_slice)
 
     def __call__(
         self,
         grid: Grid,
-        position: Index2D,
     ) -> np.float64:
-        y, x = position
-        offset_y, offset_x = self._direction.value
-        grid_value = grid.get((y + offset_y, x + offset_x))
+        y, x = self.positions
+        grid_values = grid.distribution[y, x]
         sign = self._get_sign()
         grid_distance = self._get_relevant_grid_distance(grid.node_distances)
 
-        return grid_value + 2 * sign * self._value * grid_distance
+        return grid_values + 2 * sign * self._value * grid_distance
 
     def _get_relevant_grid_distance(self, node_distances: Tuple[float, float]) -> float:
         grid_distance: float

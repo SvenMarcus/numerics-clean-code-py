@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Iterator, Tuple
 
 
-Index2D = tuple[int, int]
+Index2D = Tuple[int, int]
 
 
 @dataclass
@@ -25,7 +25,7 @@ class Grid:
             if 0 in position:
                 continue
 
-            yield position 
+            yield position
 
     def get(self, position: Index2D) -> np.float64:
         return self.distribution[position[0], position[1]]  # type: ignore
