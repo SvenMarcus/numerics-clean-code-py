@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Literal, Tuple, Type
+from typing import Literal, Tuple
 import numpy as np
 
 from numerics.grid import Grid, Index2D, Slice2D

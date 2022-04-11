@@ -53,17 +53,17 @@ class Grid:
     node_distances: Tuple[float, float]
 
     distribution: np.ndarray = field(init=False)
-    _next_distribution: np.ndarray = field(init=False)
+    next_distribution: np.ndarray = field(init=False)
 
     def __post_init__(self) -> None:
         self.distribution = np.zeros(self.dimensions)
-        self._next_distribution = np.zeros(self.dimensions)
+        self.next_distribution = np.zeros(self.dimensions)
 
     def set_next(self, position: Slice2D, value: np.float64) -> None:
-        self._next_distribution[position] = value
+        self.next_distribution[position] = value
 
     def swap_distributions(self) -> None:
-        self.distribution, self._next_distribution = (
-            self._next_distribution,
+        self.distribution, self.next_distribution = (
+            self.next_distribution,
             self.distribution,
         )

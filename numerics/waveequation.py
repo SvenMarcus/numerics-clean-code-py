@@ -1,6 +1,6 @@
 from importlib.metadata import distribution
 import numpy as np
-from numerics.grid import Grid, Slice2D
+from numerics.grid import Grid
 
 
 class WaveEquation:
@@ -14,7 +14,7 @@ class WaveEquation:
 
     def __call__(self, grid: Grid) -> np.ndarray:
         distribution = grid.distribution
-        previous_distribution = grid._next_distribution
+        previous_distribution = grid.next_distribution
         central = distribution[1:-1, 1:-1]
         previous_central = previous_distribution[1:-1, 1:-1]
         next_y, previous_y = distribution[2:, 1:-1], distribution[:-2, 1:-1]

@@ -23,9 +23,9 @@ def run_simulation(
     number_of_timesteps: int,
 ) -> np.ndarray:
     for t in range(number_of_timesteps):
-        grid._next_distribution[1:-1, 1:-1] = numerical_scheme(grid)
+        grid.next_distribution[1:-1, 1:-1] = numerical_scheme(grid)
         for bc in boundary_conditions:
-            grid._next_distribution[bc.positions] = bc(grid)
+            grid.next_distribution[bc.positions] = bc(grid)
 
         grid.swap_distributions()
 
