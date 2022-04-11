@@ -1,4 +1,3 @@
-from importlib.metadata import distribution
 import numpy as np
 from numerics.grid import Grid
 

@@ -13,8 +13,8 @@ from numerics.boundaryconditions import (
 from numerics.grid import Grid
 from numerics.heatequation import HeatEquation
 
-L = 50.0
-W = 50.0
+L = 100.0
+W = 100.0
 dx = 0.25
 dy = 0.25
 ny = int(L / dy)
@@ -28,17 +28,14 @@ dt = 0.1
 
 K = 0.111
 
-bc: Set[numerics.BoundaryCondition] = set()
 diricht_bc_top = DirichletBoundaryCondition(1.0, Slice2D.horizontal(0))
 diricht_bc_bot = DirichletBoundaryCondition(1.0, Slice2D.horizontal(ny - 1))
-for x in range(nx):
-    bc.add(diricht_bc_top)
-    bc.add(diricht_bc_bot)
 
 neumann_bc = NeumannBoundaryCondition(
     0.5, Direction.SOUTH, Slice2D.point(ny // 2, nx // 2)
 )
-bc.add(neumann_bc)
+
+bc: Set[numerics.BoundaryCondition] = {diricht_bc_top, diricht_bc_bot, neumann_bc}
 
 heat_equation = HeatEquation(K, dt)
 grid = Grid((ny, nx), (dy, dx))

@@ -12,7 +12,6 @@ class NumericalFunction(Protocol):
 
 
 class BoundaryCondition(NumericalFunction, Protocol):
-
     positions: Slice2D
 
 

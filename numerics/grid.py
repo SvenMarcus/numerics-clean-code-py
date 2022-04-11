@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.typing as npt
 from dataclasses import dataclass, field
 from typing import Tuple, Type
 
@@ -13,13 +12,10 @@ class Slice2D(tuple[slice, slice]):
         return cls(y_start=y, y_end=y + 1, x_start=x, x_end=x + 1)
 
     @classmethod
-    def horizontal(cls: Type["Slice2D"], y: int, x_start: int = 0, x_end: int = -1) -> "Slice2D":
-        return cls(
-            y_start=y,
-            y_end=y+1,
-            x_start=x_start,
-            x_end=x_end
-        )
+    def horizontal(
+        cls: Type["Slice2D"], y: int, x_start: int = 0, x_end: int = -1
+    ) -> "Slice2D":
+        return cls(y_start=y, y_end=y + 1, x_start=x_start, x_end=x_end)
 
     def __new__(
         cls: Type["Slice2D"],
