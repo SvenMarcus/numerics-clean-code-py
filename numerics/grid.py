@@ -59,9 +59,6 @@ class Grid:
         self.distribution = np.zeros(self.dimensions)
         self.next_distribution = np.zeros(self.dimensions)
 
-    def set_next(self, position: Slice2D, value: np.float64) -> None:
-        self.next_distribution[position] = value
-
     def swap_distributions(self) -> None:
         self.distribution, self.next_distribution = (
             self.next_distribution,
