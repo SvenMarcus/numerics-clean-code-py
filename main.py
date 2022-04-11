@@ -6,6 +6,7 @@ from numerics.boundaryconditions import (
     Direction,
     DirichletBoundaryCondition,
     NeumannBoundaryCondition,
+    Slice2D,
 )
 from numerics.grid import Grid
 from numerics.heatequation import HeatEquation
@@ -27,14 +28,14 @@ dt = 0.1
 K = 0.111
 
 bc = set()
-diricht_bc_top = DirichletBoundaryCondition(1.0, (slice(0, 1), slice(0, nx)))
-diricht_bc_bot = DirichletBoundaryCondition(1.0, (slice(ny - 1, ny), slice(0, nx)))
+diricht_bc_top = DirichletBoundaryCondition(1.0, Slice2D(0, 1, 0, nx))
+diricht_bc_bot = DirichletBoundaryCondition(1.0, Slice2D(ny - 1, ny, 0, nx))
 for x in range(nx):
     bc.add(diricht_bc_top)
     bc.add(diricht_bc_bot)
 
 neumann_bc = NeumannBoundaryCondition(
-    0.5, Direction.SOUTH, (slice(ny // 2, ny // 2 + 1), slice(nx // 2, nx // 2 + 1))
+    0.5, Direction.SOUTH, Slice2D(ny // 2, ny // 2 + 1, nx // 2, nx // 2 + 1)
 )
 bc.add(neumann_bc)
 
