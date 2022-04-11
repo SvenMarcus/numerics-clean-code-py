@@ -17,15 +17,15 @@ class BoundaryCondition(NumericalFunction, Protocol):
 
 
 def run_simulation(
-    numerical_scheme: NumericalFunction,
     grid: Grid,
-    nt: int,
-    bc: Iterable[BoundaryCondition],
+    numerical_scheme: NumericalFunction,
+    boundary_conditions: Iterable[BoundaryCondition],
+    number_of_timesteps: int,
 ) -> np.ndarray:
-    for t in range(nt):
+    for t in range(number_of_timesteps):
         grid._next_distribution[1:-1, 1:-1] = numerical_scheme(grid)
-        for bc_entry in bc:
-            grid._next_distribution[bc_entry.positions] = bc_entry(grid)
+        for bc in boundary_conditions:
+            grid._next_distribution[bc.positions] = bc(grid)
 
         grid.swap_distributions()
 

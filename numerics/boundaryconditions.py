@@ -2,34 +2,7 @@ from enum import Enum
 from typing import Literal, Tuple, Type
 import numpy as np
 
-from numerics.grid import Grid, Index2D
-
-
-class Slice2D(tuple[slice, slice]):
-    def __new__(
-        cls: Type["Slice2D"],
-        y_start: int,
-        y_end: int,
-        x_start: int,
-        x_end: int,
-        y_step: int = 1,
-        x_step: int = 1,
-    ) -> "Slice2D":
-        return super(Slice2D, cls).__new__(
-            cls, (slice(y_start, y_end, y_step), slice(x_start, x_end, x_step))  # type: ignore
-        )
-
-    def shift(self, y: int, x: int) -> "Slice2D":
-        y_slice = self[0]
-        x_slice = self[1]
-        return Slice2D(
-            y_start=y_slice.start + y,
-            y_end=y_slice.stop + y,
-            y_step=y_slice.step,
-            x_start=x_slice.start + x,
-            x_end=x_slice.stop + x,
-            x_step=x_slice.step,
-        )
+from numerics.grid import Grid, Index2D, Slice2D
 
 
 class DirichletBoundaryCondition:
@@ -39,16 +12,16 @@ class DirichletBoundaryCondition:
 
     def __call__(
         self,
-        grid: Grid,
+        grid: "Grid",
     ) -> np.ndarray:
         return self._value
 
 
 class Direction(Enum):
-    NORTH: Index2D = (-2, 0)
-    SOUTH: Index2D = (2, 0)
-    WEST: Index2D = (0, -2)
-    EAST: Index2D = (0, 2)
+    NORTH: "Index2D" = (-2, 0)
+    SOUTH: "Index2D" = (2, 0)
+    WEST: "Index2D" = (0, -2)
+    EAST: "Index2D" = (0, 2)
 
 
 class NeumannBoundaryCondition:

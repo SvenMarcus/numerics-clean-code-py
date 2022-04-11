@@ -29,20 +29,20 @@ dt = 0.1
 K = 0.111
 
 bc: Set[numerics.BoundaryCondition] = set()
-diricht_bc_top = DirichletBoundaryCondition(1.0, Slice2D(0, 1, 0, nx))
-diricht_bc_bot = DirichletBoundaryCondition(1.0, Slice2D(ny - 1, ny, 0, nx))
+diricht_bc_top = DirichletBoundaryCondition(1.0, Slice2D.horizontal(0))
+diricht_bc_bot = DirichletBoundaryCondition(1.0, Slice2D.horizontal(ny - 1))
 for x in range(nx):
     bc.add(diricht_bc_top)
     bc.add(diricht_bc_bot)
 
 neumann_bc = NeumannBoundaryCondition(
-    0.5, Direction.SOUTH, Slice2D(ny // 2, ny // 2 + 1, nx // 2, nx // 2 + 1)
+    0.5, Direction.SOUTH, Slice2D.point(ny // 2, nx // 2)
 )
 bc.add(neumann_bc)
 
 heat_equation = HeatEquation(K, dt)
 grid = Grid((ny, nx), (dy, dx))
 simulation_runner = lambda steps: numerics.run_simulation(
-    heat_equation, grid, steps, bc
+    grid, heat_equation, bc, steps
 )
 animate(simulation_runner)
