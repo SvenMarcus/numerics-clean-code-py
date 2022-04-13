@@ -13,8 +13,8 @@ from numerics.boundaryconditions import (
 from numerics.grid import Grid
 from numerics.heatequation import HeatEquation
 
-L = 100.0
-W = 100.0
+L = 25.0
+W = 25.0
 dx = 0.25
 dy = 0.25
 ny = int(L / dy)
@@ -35,11 +35,13 @@ neumann_bc = NeumannBoundaryCondition(
     0.5, Direction.SOUTH, Slice2D.point(ny // 2, nx // 2)
 )
 
-bc: Set[numerics.BoundaryCondition] = {diricht_bc_top, diricht_bc_bot, neumann_bc}
+bc: list[numerics.BoundaryCondition] = [diricht_bc_top, diricht_bc_bot, neumann_bc]
 
 heat_equation = HeatEquation(K, dt)
 grid = Grid((ny, nx), (dy, dx))
 simulation_runner = lambda steps: numerics.run_simulation(
     grid, heat_equation, bc, steps
 )
-animate(simulation_runner)
+
+if __name__ == "__main__":
+    animate(simulation_runner)
