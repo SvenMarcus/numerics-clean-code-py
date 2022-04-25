@@ -1,4 +1,5 @@
 from timeit import timeit
+from typing import Any, Callable
 
 import numpy as np
 
@@ -6,16 +7,18 @@ from main import K, L, W, bc, dt, dx, dy, grid, heat_equation, nx, ny
 from numerics import run_simulation
 from numerics.original import ftcs
 
+NUMBER_OF_RUNS = 5
+
+
+def benchmark_average_runtime(func: Callable[[], Any]) -> float:
+    return timeit(func, number=NUMBER_OF_RUNS) / NUMBER_OF_RUNS
+
+
 number_of_timesteps = 100_000
-number_of_runs = 5
-print(
-    "Clean solution took:",
-    timeit(
-        lambda: run_simulation(grid, heat_equation, bc, number_of_timesteps),
-        number=number_of_runs,
-    )
-    / number_of_runs,
+clean_runtime = benchmark_average_runtime(
+    lambda: run_simulation(grid, heat_equation, bc, number_of_timesteps)
 )
+
 
 T0 = np.zeros((ny, nx))
 T1 = np.zeros((ny, nx))
@@ -31,11 +34,11 @@ _bc.append(
     }
 )
 
-print(
-    "Dirty solution took:",
-    timeit(
-        lambda: ftcs(T0, T1, number_of_timesteps, dt, ny, dy, nx, dx, K, _bc),
-        number=number_of_runs,
-    )
-    / number_of_runs,
+
+dirty_runtime = benchmark_average_runtime(
+    lambda: ftcs(T0, T1, number_of_timesteps, dt, ny, dy, nx, dx, K, _bc)
 )
+
+print("Clean solution took:", clean_runtime)
+print("Dirty solution took:", dirty_runtime)
+print("Ratio of clean / dirty is", clean_runtime / dirty_runtime)
