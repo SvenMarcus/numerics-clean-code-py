@@ -12,8 +12,8 @@ dy = 0.25
 ny = int(L / dy)
 nx = int(W / dx)
 
-T0 = np.ndarray((ny, nx))
-T1 = np.ndarray((ny, nx))
+T0 = np.zeros((ny, nx))
+T1 = np.zeros((ny, nx))
 
 dt = 0.1
 
